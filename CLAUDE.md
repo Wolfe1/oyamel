@@ -17,9 +17,9 @@ Many financial products (e.g., Coinbase One credit card) don't support Plaid/MX 
 - `commander` — CLI framework
 - `dotenv` — Environment variable loading
 - `vitest` — Test runner
-- Node.js 22+
+- Node.js 18+ (22+ recommended)
 
-Note: All Monarch API calls go through direct `fetch()` against `https://api.monarch.com/graphql`. The `monarchmoney` npm SDK is NOT used (broken ESM exports, hardcoded old domains, triggers multiple OTPs on retry).
+Note: All Monarch API calls go through direct `fetch()` against `https://api.monarch.com/graphql`. The `monarchmoney` npm SDK is not used due to compatibility issues with our auth and session management approach.
 
 ## Project Structure
 ```
