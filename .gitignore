@@ -1,0 +1,37 @@
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+.env.local
+!.env.example
+
+# Claude Code (user-specific settings)
+.claude/settings.local.json
+
+# Oyamel session data
+.oyamel/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Research / internal notes
+research/
+
+# Logs
+*.log
+npm-debug.log*
+
+# PDF statements (may contain real financial data)
+samples/*.pdf
+*.pdf
