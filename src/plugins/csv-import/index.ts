@@ -65,10 +65,36 @@ interface CliOpts {
   debug?: boolean;
 }
 
-function loadMappingFile(path: string): MappingFile {
+export function loadMappingFile(path: string): MappingFile {
   const resolved = resolve(path);
   if (!existsSync(resolved)) throw new Error(`Mapping file not found: ${resolved}`);
-  return JSON.parse(readFileSync(resolved, "utf-8"));
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(resolved, "utf-8"));
+  } catch {
+    throw new Error(`Mapping file is not valid JSON: ${resolved}`);
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`Mapping file must be a JSON object: ${resolved}`);
+  }
+
+  const obj = parsed as Record<string, unknown>;
+  const stringFields = ["date", "amount", "merchant", "debitAmount", "creditAmount", "category", "notes", "dateFormat", "delimiter"];
+  for (const key of stringFields) {
+    if (key in obj && typeof obj[key] !== "string") {
+      throw new Error(`Mapping file: "${key}" must be a string`);
+    }
+  }
+  if ("skipRows" in obj && typeof obj.skipRows !== "number") {
+    throw new Error(`Mapping file: "skipRows" must be a number`);
+  }
+  if ("amountSign" in obj && !["negative-debit", "negative-credit", "separate-columns"].includes(obj.amountSign as string)) {
+    throw new Error(`Mapping file: "amountSign" must be "negative-debit", "negative-credit", or "separate-columns"`);
+  }
+
+  return parsed as MappingFile;
 }
 
 function buildMappingAndOptions(

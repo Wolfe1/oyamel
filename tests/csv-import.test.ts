@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import { CsvImportPlugin, resolveCsvPaths } from "../src/plugins/csv-import/index.js";
+import { CsvImportPlugin, resolveCsvPaths, loadMappingFile } from "../src/plugins/csv-import/index.js";
 
 const TEST_DIR = join(tmpdir(), "oyamel-csv-import-test-" + Date.now());
 
@@ -54,6 +54,67 @@ describe("resolveCsvPaths", () => {
     writeFileSync(join(dir, "data.CSV"), "x");
     const paths = resolveCsvPaths(dir);
     expect(paths).toHaveLength(1);
+  });
+});
+
+// ── loadMappingFile validation ────────────────────────────────────────
+
+describe("loadMappingFile", () => {
+  it("loads a valid mapping file", () => {
+    const f = join(TEST_DIR, "valid-mapping.json");
+    writeFileSync(f, JSON.stringify({ date: "Date", amount: "Amount", merchant: "Desc" }));
+    const result = loadMappingFile(f);
+    expect(result.date).toBe("Date");
+    expect(result.amount).toBe("Amount");
+    expect(result.merchant).toBe("Desc");
+  });
+
+  it("throws on non-existent file", () => {
+    expect(() => loadMappingFile("/no/such/file.json")).toThrow("Mapping file not found");
+  });
+
+  it("throws on invalid JSON", () => {
+    const f = join(TEST_DIR, "bad-json.json");
+    writeFileSync(f, "not json{{{");
+    expect(() => loadMappingFile(f)).toThrow("not valid JSON");
+  });
+
+  it("throws if file contains an array", () => {
+    const f = join(TEST_DIR, "array.json");
+    writeFileSync(f, "[]");
+    expect(() => loadMappingFile(f)).toThrow("must be a JSON object");
+  });
+
+  it("throws if file contains a scalar", () => {
+    const f = join(TEST_DIR, "scalar.json");
+    writeFileSync(f, '"hello"');
+    expect(() => loadMappingFile(f)).toThrow("must be a JSON object");
+  });
+
+  it("throws if string field has wrong type", () => {
+    const f = join(TEST_DIR, "bad-field.json");
+    writeFileSync(f, JSON.stringify({ date: 123 }));
+    expect(() => loadMappingFile(f)).toThrow('"date" must be a string');
+  });
+
+  it("throws if skipRows is not a number", () => {
+    const f = join(TEST_DIR, "bad-skip.json");
+    writeFileSync(f, JSON.stringify({ skipRows: "five" }));
+    expect(() => loadMappingFile(f)).toThrow('"skipRows" must be a number');
+  });
+
+  it("throws if amountSign is invalid", () => {
+    const f = join(TEST_DIR, "bad-sign.json");
+    writeFileSync(f, JSON.stringify({ amountSign: "backwards" }));
+    expect(() => loadMappingFile(f)).toThrow('"amountSign" must be');
+  });
+
+  it("accepts valid amountSign values", () => {
+    for (const sign of ["negative-debit", "negative-credit", "separate-columns"]) {
+      const f = join(TEST_DIR, `sign-${sign}.json`);
+      writeFileSync(f, JSON.stringify({ amountSign: sign }));
+      expect(loadMappingFile(f).amountSign).toBe(sign);
+    }
   });
 });
 

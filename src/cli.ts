@@ -1,7 +1,7 @@
 /** CLI entry point for Oyamel. */
 
-import { resolve, join } from "path";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { join } from "path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "fs";
 import { homedir } from "os";
 import { Command } from "commander";
 import { config as loadEnv } from "dotenv";
@@ -10,15 +10,12 @@ import { signedAmount, type Transaction } from "./schema.js";
 import { plugins } from "./plugins/registry.js";
 import type { CliHelpers } from "./plugins/base.js";
 
-// Load credentials from ~/.oyamel/credentials first, then fall back to .env
+// Load credentials from ~/.oyamel/credentials
 const CREDS_DIR = join(homedir(), ".oyamel");
 const CREDS_PATH = join(CREDS_DIR, "credentials");
 if (existsSync(CREDS_PATH)) {
   loadEnv({ path: CREDS_PATH, quiet: true });
 }
-// Also load .env for backward compatibility (won't override already-set vars)
-const envPath = resolve(import.meta.dirname, "..", ".env");
-loadEnv({ path: envPath, quiet: true });
 
 import * as readline from "readline";
 
@@ -343,6 +340,41 @@ program
       console.log(`  ${meta.id.padEnd(20)} ${meta.name}`);
       console.log(`  ${"".padEnd(20)} ${meta.description}\n`);
     }
+  });
+
+program
+  .command("logout")
+  .description("Remove saved credentials and session data from ~/.oyamel/")
+  .action(async () => {
+    const SESSION_PATH = join(CREDS_DIR, "session_token");
+    const ACCOUNTS_PATH = join(CREDS_DIR, "plugin_accounts.json");
+
+    const files = [
+      { path: CREDS_PATH, label: "credentials" },
+      { path: SESSION_PATH, label: "session token" },
+      { path: ACCOUNTS_PATH, label: "plugin account mappings" },
+    ];
+
+    const existing = files.filter((f) => existsSync(f.path));
+    if (!existing.length) {
+      console.log("Nothing to remove — no saved data found in ~/.oyamel/.");
+      return;
+    }
+
+    console.log("\nThe following files will be deleted:");
+    for (const f of existing) {
+      console.log(`  ${f.path} (${f.label})`);
+    }
+
+    if (!(await confirm("\nProceed?", false))) {
+      console.log("Cancelled.");
+      return;
+    }
+
+    for (const f of existing) {
+      unlinkSync(f.path);
+    }
+    console.log("Done. All saved credentials and session data removed.");
   });
 
 program.parse();

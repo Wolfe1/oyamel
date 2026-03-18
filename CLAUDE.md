@@ -80,6 +80,8 @@ oyamel recategorize                    Re-categorize uncategorized txns
   --plugin <id>                        Plugin for account lookup (default: coinbase-one)
 
 oyamel plugins                         List available plugins
+
+oyamel logout                          Remove saved credentials and session data
 ```
 
 Run with: `npx oyamel <command>`
