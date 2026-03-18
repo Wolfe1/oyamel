@@ -329,6 +329,91 @@ export class CoinbaseOnePdfPlugin implements SourcePlugin {
       });
 
     parent
+      .command("demo")
+      .description("Walk through a sample sync workflow with fake data (no PDF or account needed)")
+      .action(async () => {
+        const sampleTransactions: Transaction[] = [
+          { date: "2025-09-03", amount: 4.50,   txType: TransactionType.DEBIT,  merchant: "Starbucks", notes: "STARBUCKS STORE 12345 SEATTLE WA", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-05", amount: 52.43,  txType: TransactionType.DEBIT,  merchant: "Whole Foods Market", notes: "WHOLE FOODS MKT 10234 SAN FRANCISCO CA", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-07", amount: 127.89, txType: TransactionType.DEBIT,  merchant: "Best Buy", notes: "BESTBUYCOM806432178", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-10", amount: 15.99,  txType: TransactionType.DEBIT,  merchant: "Netflix", notes: "NETFLIX.COM", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-12", amount: 38.72,  txType: TransactionType.DEBIT,  merchant: "Shell Oil", notes: "SHELL OIL 57442 AUSTIN TX", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-15", amount: 250.00, txType: TransactionType.CREDIT, merchant: "Payment - Thank You", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-18", amount: 9.99,   txType: TransactionType.DEBIT,  merchant: "Spotify", notes: "SPOTIFY USA", sourcePlugin: "coinbase_one" },
+          { date: "2025-09-22", amount: 63.15,  txType: TransactionType.DEBIT,  merchant: "Target", notes: "TARGET T-2174 DALLAS TX", sourcePlugin: "coinbase_one" },
+        ];
+
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+        console.log("╔══════════════════════════════════════════════════════════╗");
+        console.log("║          Oyamel — Coinbase One Sync Demo                ║");
+        console.log("║   This is a simulated walkthrough with sample data.     ║");
+        console.log("╚══════════════════════════════════════════════════════════╝");
+
+        // Step 1: Parse
+        console.log("\n── Step 1: Parse PDF statement ──\n");
+        console.log("$ oyamel coinbase-one sync ~/statements/september-2025.pdf\n");
+        await sleep(400);
+        console.log("Parsing PDF... found 8 transactions.\n");
+        helpers.printTransactions(sampleTransactions);
+
+        // Step 2: Auth
+        console.log("\n── Step 2: Authenticate with Monarch ──\n");
+        await sleep(300);
+        console.log("--- Monarch Authentication ---");
+        console.log("Monarch email: user@example.com");
+        console.log("Monarch password: ********");
+        await sleep(200);
+        console.log("Logging in to Monarch...");
+        await sleep(300);
+        console.log("Logged in successfully.");
+
+        // Step 3: Account
+        console.log("\n── Step 3: Select target account ──\n");
+        await sleep(200);
+        console.log("Available Monarch accounts:");
+        console.log("  1. Checking (depository) — $4,231.50");
+        console.log("  2. Savings (depository) — $12,500.00");
+        console.log("  3. Coinbase One Credit Card (credit) — $-312.53");
+        console.log("  4. Brokerage (investment) — $45,800.00");
+        console.log("\nSelect account number: 3");
+        await sleep(200);
+        console.log("Saved 'Coinbase One Credit Card' as default for coinbase-one.");
+
+        // Step 4: Dedup + Push
+        console.log("\n── Step 4: Deduplicate & push ──\n");
+        console.log("Target account: Coinbase One Credit Card");
+        console.log("Push 8 transactions to 'Coinbase One Credit Card'? [Y/n] Y\n");
+        await sleep(200);
+
+        const cats = ["Food & Drink", "Groceries", "Shopping", "Entertainment", "Auto & Transport", "Payment", "Entertainment", "Shopping"];
+        let created = 0;
+        let skipped = 0;
+        for (let i = 0; i < sampleTransactions.length; i++) {
+          await sleep(250);
+          const tx = sampleTransactions[i];
+          const sign = tx.txType === "debit" ? "-" : "+";
+          const amt = `${sign}$${tx.amount.toFixed(2)}`;
+
+          // Simulate 1 duplicate
+          if (i === 3) {
+            skipped++;
+            console.log(`  SKIP  ${tx.date}  ${amt.padStart(12)}  ${tx.merchant}`);
+          } else {
+            created++;
+            console.log(`  ADD   ${tx.date}  ${amt.padStart(12)}  ${tx.merchant}  [${cats[i]}]`);
+          }
+        }
+
+        console.log(`\nDone. Created ${created} transactions, skipped ${skipped} duplicates, ${created} auto-categorized.`);
+
+        console.log("\n────────────────────────────────────────────────────────────");
+        console.log("That's it! To run a real sync, use:");
+        console.log("  npx oyamel coinbase-one sync <path-to-pdf>");
+        console.log("────────────────────────────────────────────────────────────\n");
+      });
+
+    parent
       .command("sync")
       .description("Sync statement(s) to a Monarch account")
       .argument("<path>", "Path to a PDF statement or directory of PDFs")

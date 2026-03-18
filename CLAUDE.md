@@ -56,6 +56,7 @@ oyamel <plugin> <command>              Plugin-scoped commands
 
 oyamel coinbase-one preview <path>     Preview parsed transactions from PDF
 oyamel coinbase-one sync <path>        Sync PDF statement(s) to Monarch
+oyamel coinbase-one demo               Walk through a sample sync with fake data
 
 oyamel csv-import preview <path>       Preview parsed transactions from CSV
 oyamel csv-import sync <path>          Sync CSV file(s) to Monarch
