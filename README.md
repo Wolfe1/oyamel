@@ -21,7 +21,11 @@ This was mainly made to bridge the gap for the Coinbase One Credit Card syncing 
 
 - Set the type, name, and default the balance to $0
 
-2. Run the command for your sync:
+2. Get the data you want to import.
+- For example the statements for the coinbase credit card are stored here: https://accounts.coinbase.com/statements/credit-card
+- Check the plugin readme pages for more details.
+
+4. Run the command for your sync:
 
 ```bash
 # Sync a Coinbase One Credit Card PDF statement
