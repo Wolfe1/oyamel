@@ -76,6 +76,6 @@ Sections like "Fees", "Interest charges", "Account summary", and payment warning
 
 ## Getting statements
 
-1. Log into [card.coinbase.com](https://card.coinbase.com)
+1. Log into https://accounts.coinbase.com/statements/credit-card
 2. Go to **Statements**
 3. Download the monthly PDF(s) you want to import
